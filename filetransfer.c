@@ -5,7 +5,7 @@
 *   Author        : owb
 *   Email         : 2478644416@qq.com
 *   File Name     : filetransfer.c
-*   Last Modified : 2019-11-02 21:37
+*   Last Modified : 2019-11-03 10:02
 *   Describe      :
 *
 *******************************************************/
@@ -27,7 +27,6 @@
 #define RECV_BUF_SIZE   10000
 #define DEFAULT_PORT    9527
 #define DEFAULT_ADDR    "127.0.0.1"
-#define DEFAULT_PASSWD  123456
 
 #if _DEBUG
 #define TRIM(x) strrchr(x,'/')? strrchr(x,'/')+1 : x
@@ -145,15 +144,19 @@ void sendFile(int sockfd, const char* path, int passwd) {
     if(send(sockfd, &filesize, sizeof filesize, 0) == SOCK_ERROR)
         ERR_EXIT("send error");
 
-    srand(passwd);
+    if(passwd != -1)
+        srand(passwd);
+
     char buf[SEND_BUF_SIZE];
     int count = 0;
     int res = 0;
     char bar[52] = { 0 };
     int k = 0;
     while((res = fread(buf, 1, SEND_BUF_SIZE, fp))) {
-        for(int i = 0; i != res; ++i)
-            buf[i] = buf[i] ^ rand();
+        if(passwd != -1) {
+            for(int i = 0; i != res; ++i)
+                buf[i] = buf[i] ^ rand();
+        }
 
         count += sendBuffer(sockfd, buf, res);
 
@@ -220,7 +223,9 @@ void recvFile(int sockfd, const char* path, int passwd) {
 
     INFO("[%s] is being received... (size: %d KB)", filename, filesize);
 
-    srand(passwd);
+    if(passwd != -1)
+        srand(passwd);
+
     char buf[RECV_BUF_SIZE];
     int count = 0;
     int res = 0;
@@ -230,8 +235,10 @@ void recvFile(int sockfd, const char* path, int passwd) {
         if(res == 0)
             break;
 
-        for(int i = 0; i != res; ++i)
-            buf[i] = buf[i] ^ rand();
+        if(passwd != -1) {
+            for(int i = 0; i != res; ++i)
+                buf[i] = buf[i] ^ rand();
+        }
         
         count += fwrite(buf, 1, res, fp);
 
@@ -280,7 +287,7 @@ int main(int argc, char* argv[]) {
     int opt = -1;
     int check_send = 0;
     int check_recv = 0;
-    int passwd = 0;
+    int passwd = -1;
     char* ipaddr = NULL;
     char* filepath = NULL;
     short port = 0;
