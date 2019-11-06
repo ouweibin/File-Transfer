@@ -5,7 +5,7 @@
 *   Author        : owb
 *   Email         : 2478644416@qq.com
 *   File Name     : filetransfer.c
-*   Last Modified : 2019-11-03 10:02
+*   Last Modified : 2019-11-06 21:01
 *   Describe      :
 *
 *******************************************************/
@@ -134,10 +134,16 @@ void sendFile(int sockfd, const char* path, int passwd) {
         ERR_EXIT("fopen error");
 
     fseek(fp, 0, SEEK_END);
-    int filesize = ftell(fp) / 1024;   // bug
+    int filesize = ftell(fp);    // 不大于2G 
     fseek(fp, 0, SEEK_SET);
 
-    INFO("[%s] is being sent... (size: %d KB)", filename, filesize);
+    int filesizeKB = filesize / 1024;
+    if(filesizeKB == 0) {
+        INFO("[%s] is being sent... (size: %d B)", filename, filesize);
+    }
+    else {
+        INFO("[%s] is being sent... (size: %d KB)", filename, filesizeKB);
+    }
 
     if(send(sockfd, filename, NAME_MAX, 0) == SOCK_ERROR)
         ERR_EXIT("send error");
@@ -161,8 +167,8 @@ void sendFile(int sockfd, const char* path, int passwd) {
         count += sendBuffer(sockfd, buf, res);
 
         // 进度条
-        if(filesize >= 1) {
-            k = (count / 1024 * 100) / filesize;
+        if(filesizeKB > 256) {  // 大于256KB
+            k = (count / 1024 * 100) / filesizeKB;
             bar[k/2] = '#';
             printf("[%-51s][%d%%][%c]\r", bar, k, lable[k%4]);
             fflush(stdout);
@@ -170,7 +176,7 @@ void sendFile(int sockfd, const char* path, int passwd) {
     }
     printf("\n");
 
-    if(filesize == count / 1024) {
+    if(count == filesize) {
         INFO("send success");
     }
     else {
@@ -221,7 +227,13 @@ void recvFile(int sockfd, const char* path, int passwd) {
     if(fp == NULL)
         ERR_EXIT("fopen error");
 
-    INFO("[%s] is being received... (size: %d KB)", filename, filesize);
+    int filesizeKB = filesize / 1024;
+    if(filesizeKB == 0) {    // 小于1KB就以B为单位
+        INFO("[%s] is being received... (size: %d B)", filename, filesize);
+    }
+    else {
+        INFO("[%s] is being received... (size: %d KB)", filename, filesizeKB);
+    }
 
     if(passwd != -1)
         srand(passwd);
@@ -243,8 +255,8 @@ void recvFile(int sockfd, const char* path, int passwd) {
         count += fwrite(buf, 1, res, fp);
 
         // 进度条
-        if(filesize >= 1) {
-            k = (count / 1024 * 100) / filesize;
+        if(filesizeKB > 256) {  // 大于256KB
+            k = (count / 1024 * 100) / filesizeKB;
             bar[k/2] = '#';
             printf("[%-51s][%d%%][%c]\r", bar, k, lable[k%4]);
             fflush(stdout);
@@ -256,10 +268,10 @@ void recvFile(int sockfd, const char* path, int passwd) {
         exit(EXIT_FAILURE);
     }
 
-    fseek(fp, 0, SEEK_END);
-    int check_filesize = ftell(fp) / 1024;
+//    fseek(fp, 0, SEEK_END);
+//    int check_filesize = ftell(fp);
 
-    if(check_filesize == filesize) {
+    if(count == filesize) {
         INFO("download finish");
     }
     else {

@@ -2,8 +2,6 @@
 
 简单的用于文件传输的命令行工具
 
-
-
 ## 特点
 
 - 服务端阻塞发送，客户端阻塞接收
@@ -18,27 +16,17 @@
 - 进度条实时显示文件传输进度
 - 使用百兆网卡进行测试，实时速率达到11.7MB/s
 
-
-
 ## 限制
 
 - 传输文件大小不超过2GB
 - password只能包含数字且在[0, 2147483648‬]区间
 
-
-
 ## 操作
 
-![](picture/usage.png)
+![](https://gitee.com/ouweibin/PictureBed/raw/master/image/usage.jpg)
 
+![](https://gitee.com/ouweibin/PictureBed/raw/master/image/send.jpg)
 
+![](https://gitee.com/ouweibin/PictureBed/raw/master/image/recv.jpg)
 
-![](picture/send.png)
-
-
-
-![](picture/recv.png)
-
-
-
-![](picture/speed.png)
+![](https://gitee.com/ouweibin/PictureBed/raw/master/image/speed.jpg)
